@@ -1,0 +1,17 @@
+#!/bin/sh
+
+COMMITTING_FILES=`git diff --cached --name-only --diff-filter=ACM`
+
+# Execute gofmt
+DIFF_GO_FILES=`echo "${COMMITTING_FILES}" | grep '\.go$'`
+if [ "${DIFF_GO_FILES}" ]; then
+  UNFORMATTED=`gofmt -l ${DIFF_GO_FILES}`
+  if [ "${UNFORMATTED}" ]; then
+    echo >&2 "Go files must be formatted with gofmt. Please run:"
+    for FILE_NAME in ${UNFORMATTED}; do
+      echo >&2 " gofmt -w ${PWD}/${FILE_NAME}"
+    done
+    exit 1
+  fi
+fi
+
