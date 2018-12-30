@@ -1,7 +1,13 @@
 package main
 
-import "github.com/shoichiimamura/kubase/cmd"
+import (
+	"github.com/shoichiimamura/kubase/cmd"
+	"log"
+)
 
 func main() {
-	cmd.Execute()
+	command := cmd.NewCommand()
+	if err := command.Execute(); err != nil {
+		log.Fatal(err)
+	}
 }

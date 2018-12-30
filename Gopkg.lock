@@ -122,14 +122,53 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:129f316ae0ffeee220c21f72bfc8d90f833d506f7bdaa9343d9c90d942794ed4"
+  digest = "1:b73534f8441bf1e20a5b77c55810c6f986d10bd9fb3d26a90f5c6c9dc517ec0f"
+  name = "k8s.io/api"
+  packages = [
+    "admissionregistration/v1alpha1",
+    "admissionregistration/v1beta1",
+    "apps/v1",
+    "apps/v1beta1",
+    "apps/v1beta2",
+    "auditregistration/v1alpha1",
+    "authentication/v1",
+    "authentication/v1beta1",
+    "authorization/v1",
+    "authorization/v1beta1",
+    "autoscaling/v1",
+    "autoscaling/v2beta1",
+    "autoscaling/v2beta2",
+    "batch/v1",
+    "batch/v1beta1",
+    "batch/v2alpha1",
+    "certificates/v1beta1",
+    "coordination/v1beta1",
+    "core/v1",
+    "events/v1beta1",
+    "extensions/v1beta1",
+    "networking/v1",
+    "policy/v1beta1",
+    "rbac/v1",
+    "rbac/v1alpha1",
+    "rbac/v1beta1",
+    "scheduling/v1alpha1",
+    "scheduling/v1beta1",
+    "settings/v1alpha1",
+    "storage/v1",
+    "storage/v1alpha1",
+    "storage/v1beta1",
+  ]
+  pruneopts = "UT"
+  revision = "173ce66c1e39d1d0f56e0b3347ff2988068aecd0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b4c7712bb02ad1889a3970f9273c3997c516054bc5e3a4e39e6fa9106b0dfe14"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/resource",
-    "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
-    "pkg/apis/meta/v1beta1",
     "pkg/conversion",
     "pkg/conversion/queryparams",
     "pkg/fields",
@@ -161,20 +200,20 @@
   revision = "9c4c366543346abeca2a5cd2c40cf1a30d19a2ec"
 
 [[projects]]
+  digest = "1:b1bacdc9d7b76817e4652d5c91fc919f83ae9fd86e57885bc1dc79ec3b1c9a8f"
+  name = "k8s.io/client-go"
+  packages = ["kubernetes/scheme"]
+  pruneopts = "UT"
+  revision = "e64494209f554a6723674bd494d69445fb76a1d4"
+  version = "v10.0.0"
+
+[[projects]]
   digest = "1:e2999bf1bb6eddc2a6aa03fe5e6629120a53088926520ca3b4765f77d7ff7eab"
   name = "k8s.io/klog"
   packages = ["."]
   pruneopts = "UT"
   revision = "a5bc97fbc634d635061f3146511332c7e313a55a"
   version = "v0.1.0"
-
-[[projects]]
-  digest = "1:b07026915c9169c1747193d847b1faa99a0d96da066782ce101d388f05b90235"
-  name = "k8s.io/kubernetes"
-  packages = ["pkg/apis/core"]
-  pruneopts = "UT"
-  revision = "eec55b9ba98609a46fee712359c7b5b365bdd920"
-  version = "v1.13.1"
 
 [[projects]]
   digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
@@ -189,9 +228,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/spf13/cobra",
-    "k8s.io/apimachinery/pkg/apis/meta/v1",
-    "k8s.io/apimachinery/pkg/util/yaml",
-    "k8s.io/kubernetes/pkg/apis/core",
+    "k8s.io/api/core/v1",
+    "k8s.io/client-go/kubernetes/scheme",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,15 +1,7 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
-	"io"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/kubernetes/pkg/apis/core"
-	"log"
-	"os"
-	"path/filepath"
 )
 
 // 共通フラグ用の変数
@@ -28,18 +20,17 @@ import (
 // 読み込んだ設定ファイルの構造体
 // var config Config
 
-var rootCmd = &cobra.Command{
-	Use: "kubase",
-	Run: root,
-}
+// =====USAGE=====
+// EDITOR=vim kubase edit filepath
+// encodeして標準出力はusecaseがないので不要
+// decodeして標準出力はkubactlでoption指定して確認できるので不要
 
 // ファイル名
-var fileName string
+// var fileName string
 
 // ファイル読み込みのタイミングでフラグを定義する
 func init() {
-	// -d filename でdecodeする
-	rootCmd.Flags().StringVarP(&fileName, "decode", "d", "", "decode base64 file")
+	// rootCmd.Flags().StringVarP(&fileName, "decode", "d", "", "decode base64 file")
 	// 設定ファイル名をフラグで受け取る
 	// rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "./config.yaml", "config file name")
 
@@ -50,26 +41,26 @@ func init() {
 	// cobra.Command 実行前の初期化処理を定義する。
 	// rootCmd.Execute > コマンドライン引数の処理 > cobra.OnInitialize > rootCmd.Run という順に実行されるので、
 	// フラグでうけとった設定ファイル名を使って設定ファイルを読み込み、コマンド実行時に設定ファイルの内容を利用することができる。
-	cobra.OnInitialize(func() {
+	// cobra.OnInitialize(func() {
 
-		// 設定ファイル名を viper に定義する
-		// viper.SetConfigFile(configFile)
+	// 設定ファイル名を viper に定義する
+	// viper.SetConfigFile(configFile)
 
-		// env
-		// viper.AutomaticEnv()
+	// env
+	// viper.AutomaticEnv()
 
-		// 設定ファイルを読み込む
-		// if err := viper.ReadInConfig(); err != nil {
-		// 	fmt.Println(err)
-		// 	os.Exit(1)
-		// }
-		//
-		// // 設定ファイルの内容を構造体にコピーする
-		// if err := viper.Unmarshal(&config); err != nil {
-		// 	fmt.Println(err)
-		// 	os.Exit(1)
-		// }
-	})
+	// 設定ファイルを読み込む
+	// if err := viper.ReadInConfig(); err != nil {
+	// 	fmt.Println(err)
+	// 	os.Exit(1)
+	// }
+	//
+	// // 設定ファイルの内容を構造体にコピーする
+	// if err := viper.Unmarshal(&config); err != nil {
+	// 	fmt.Println(err)
+	// 	os.Exit(1)
+	// }
+	// })
 
 	// コマンド共通のフラグを定義
 	// rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "debug enable flag")
@@ -88,31 +79,15 @@ func init() {
 	// rootCmd.PersistentFlags().StringP("name2", "n", "default", "your name2")
 }
 
-type Secret struct {
-	core.Secret
-	Data map[string][]byte
+func NewCommand() *cobra.Command {
+	command := &cobra.Command{
+		Use: "kubase",
+		Run: runHelp,
+	}
+	command.AddCommand(NewEditCommand())
+	return command
 }
 
-func root(c *cobra.Command, args []string) {
-	fmt.Printf("fileName: %v\n", fileName)
-	fmt.Printf("ext: %v\n", filepath.Ext(fileName))
-	f, err := os.Open("config.yaml")
-	if err != nil {
-		log.Fatal(err)
-	}
-	d := yaml.NewYAMLOrJSONDecoder(f, 4096)
-	for {
-		ext := runtime.RawExtension{}
-		if err := d.Decode(&ext); err != nil {
-			if err == io.EOF {
-				break
-			}
-			log.Fatal(err)
-		}
-		fmt.Println("raw: ", string(ext.Raw))
-	}
-}
-
-func Execute() {
-	rootCmd.Execute()
+func runHelp(cmd *cobra.Command, args []string) {
+	cmd.Help()
 }
