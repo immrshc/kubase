@@ -60,6 +60,10 @@ type objectMeta struct {
 	CreationTimestamp *meta.Time `json:"creationTimestamp,omitempty"`
 }
 
+// jsonはstructのfield順に並ぶ
+// map, interfaceのデータは辞書順に並ぶ
+// yamlはstruct => json => interface{} => yamlの順で変換されるので辞書順に並ぶ
+// https://github.com/google/metallb/blob/master/vendor/sigs.k8s.io/yaml/yaml.go#L82
 type rawSecret struct {
 	v1.Secret
 	ObjectMeta objectMeta           `json:"metadata,omitempty"`
@@ -99,8 +103,6 @@ func edit(cmd *cobra.Command, args []string) {
 	}
 
 	// write tempfile data in original file
-	// TODO: keyの順序を保つ
-	// https://golang.org/pkg/encoding/json/#RawMessage
 	if err := writeConvertedData(tempfilePath, originalFilePath, encodeDataByBase64); err != nil {
 		log.Fatal(err)
 	}
@@ -176,7 +178,6 @@ func runEdit(path string) error {
 	if err != nil {
 		panic("Could not find any editors")
 	}
-	fmt.Println(strings.Split(string(out), "\n"))
 	cmd = exec.Command(strings.Split(string(out), "\n")[0], path)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
