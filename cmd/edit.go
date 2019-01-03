@@ -4,9 +4,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/google/shlex"
 	"github.com/shoichiimamura/kubase/codec"
 	"github.com/shoichiimamura/kubase/util"
 	"github.com/spf13/cobra"
+	"io"
 	"io/ioutil"
 	"k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,20 +47,61 @@ type rawSecret struct {
 	Data       map[string]*rawValue `json:"data"`
 }
 
-// TODO: explain usage
+var editor string
+
 func NewEditCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use: "edit",
+		Use:   "edit file",
+		Short: "Edit decoded secret file.",
+		Long: util.LongDesc(`
+			Edit decoded kubernetes secret manifest, which should be encoded
+			by base64.
+			
+			Value data field of this manifest has should be encode by base64.
+			You can edit decoded secret manifest file, using editor. After the
+			editor closed, data value is encoded. if you want to select editor
+			to edit secret manifest file, you can select it by passing value of
+			--editor flag.
+		`),
+		Example: util.Examples(`
+				# Edit yaml or json secret file
+				kubase edit secret.yaml
+
+				# Edit secret file by selected editor
+				kubase edit secret.json --editor vim
+		`),
+		Args: func(cmd *cobra.Command, args []string) error {
+			return validateArgs(cmd, args)
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			util.ErrorCheck(edit(cmd, args))
 		},
 	}
+	command.Flags().StringVarP(&editor, "editor", "e", "", "editor to write decoded file")
 	return command
 }
 
+func validateArgs(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("number of args is over acceptance: %v", args)
+	}
+	filePath := getFilePathFromArgs(args)
+	info, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
+	if m := info.Mode(); m.IsDir() {
+		return fmt.Errorf("could not read direcotry at %s", filePath)
+	}
+	return nil
+}
+
+func getFilePathFromArgs(args []string) string {
+	return args[0]
+}
+
 func edit(cmd *cobra.Command, args []string) error {
-	// TODO: validate
-	originalFilePath := args[0]
+	originalFilePath := getFilePathFromArgs(args)
 
 	// create temporary directory
 	tmpdir, err := ioutil.TempDir("", "")
@@ -79,8 +122,13 @@ func edit(cmd *cobra.Command, args []string) error {
 	}
 
 	// let user edit
-	// TODO: Check difference by file hash
-	if err := runEdit(tempfilePath); err != nil {
+	editOption := editCommandOption{
+		editorPath: tempfilePath,
+		stdin:      os.Stdin,
+		stdout:     os.Stdout,
+		stderr:     os.Stderr,
+	}
+	if err := runEdit(editOption); err != nil {
 		return err
 	}
 
@@ -132,37 +180,54 @@ func writeConvertedData(src, dist string, converter func(rs runtime.Object) erro
 		return err
 	}
 	// write tempfile data in original file
-	if err := ioutil.WriteFile(dist, b, os.ModeType); err != nil {
+	if err := ioutil.WriteFile(dist, b, 0666); err != nil {
 		return fmt.Errorf("failure to write into %s: %v", dist, err)
 	}
 	return nil
 }
 
 func convertSecretFile(sc codec.SecretCodec, converter func(rs runtime.Object) error) ([]byte, error) {
-	// TODO: handle syntax error which only written file raised
-	o, _, err := sc.Decode(&rawSecret{})
+	o, gvk, err := sc.Decode(&rawSecret{})
 	if err != nil {
+		// TODO: handle syntax error which only written file raised
 		return nil, err
 	}
-	// TODO: validate kind
+	if gvk.Kind != "Secret" {
+		return nil, fmt.Errorf("invalid resource kind: %s", gvk.Kind)
+	}
 	if err := converter(o); err != nil {
 		return nil, err
 	}
 	return sc.Encode(o)
 }
 
-// TODO: enable to respond to option
-func runEdit(path string) error {
+type editCommandOption struct {
+	editorPath string
+	stdin      io.Reader
+	stdout     io.Writer
+	stderr     io.Writer
+}
+
+func runEdit(option editCommandOption) error {
 	var cmd *exec.Cmd
-	cmd = exec.Command("which", "vim", "nano")
-	out, err := cmd.Output()
-	editors := strings.Split(string(out), "\n")
-	if err != nil || len(editors) == 0 {
-		return fmt.Errorf("failure to find any editors")
+	if editor != "" {
+		parts, err := shlex.Split(editor)
+		if err != nil {
+			return fmt.Errorf("invalid $EDITOR: %s", editor)
+		}
+		parts = append(parts, option.editorPath)
+		cmd = exec.Command(parts[0], parts[1:]...)
+	} else {
+		cmd = exec.Command("which", "vim", "nano")
+		out, err := cmd.Output()
+		editors := strings.Split(string(out), "\n")
+		if err != nil || len(editors) == 0 {
+			return fmt.Errorf("failure to find any editors")
+		}
+		cmd = exec.Command(editors[0], option.editorPath)
 	}
-	cmd = exec.Command(editors[0], path)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdin = option.stdin
+	cmd.Stdout = option.stdout
+	cmd.Stderr = option.stderr
 	return cmd.Run()
 }
