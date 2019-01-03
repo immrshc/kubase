@@ -2,12 +2,14 @@ package main
 
 import (
 	"github.com/shoichiimamura/kubase/cmd"
-	"log"
+	"github.com/shoichiimamura/kubase/util"
+	"os"
 )
 
 func main() {
 	command := cmd.NewCommand()
 	if err := command.Execute(); err != nil {
-		log.Fatal(err)
+		util.ErrorCheck(err)
+		os.Exit(1)
 	}
 }
