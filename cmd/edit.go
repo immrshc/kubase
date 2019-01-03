@@ -45,6 +45,7 @@ type rawSecret struct {
 	Data       map[string]*rawValue `json:"data"`
 }
 
+// TODO: explain usage
 func NewEditCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use: "edit",
@@ -78,6 +79,7 @@ func edit(cmd *cobra.Command, args []string) error {
 	}
 
 	// let user edit
+	// TODO: Check difference by file hash
 	if err := runEdit(tempfilePath); err != nil {
 		return err
 	}
@@ -137,17 +139,19 @@ func writeConvertedData(src, dist string, converter func(rs runtime.Object) erro
 }
 
 func convertSecretFile(sc codec.SecretCodec, converter func(rs runtime.Object) error) ([]byte, error) {
+	// TODO: handle syntax error which only written file raised
 	o, _, err := sc.Decode(&rawSecret{})
 	if err != nil {
 		return nil, err
 	}
-	// TODO: validate
+	// TODO: validate kind
 	if err := converter(o); err != nil {
 		return nil, err
 	}
 	return sc.Encode(o)
 }
 
+// TODO: enable to respond to option
 func runEdit(path string) error {
 	var cmd *exec.Cmd
 	cmd = exec.Command("which", "vim", "nano")

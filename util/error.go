@@ -6,5 +6,7 @@ import (
 )
 
 func ErrorCheck(err error) {
-	fmt.Fprintf(os.Stderr, "ERROR %v\n", err)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR %v\n", err)
+	}
 }
