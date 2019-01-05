@@ -10,7 +10,6 @@ func NewCommand() *cobra.Command {
 		Run: runHelp,
 	}
 	command.AddCommand(NewEditCommand())
-	command.AddCommand(NewDecodeCommand())
 	return command
 }
 

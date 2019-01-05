@@ -2,7 +2,7 @@ package codec
 
 import (
 	"bytes"
-	"fmt"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -88,7 +88,7 @@ func encodersCorrespondingInput(info []runtime.SerializerInfo, data []byte) ([]r
 		}
 	}
 	if len(encoders) == 0 && lastErr == nil {
-		lastErr = fmt.Errorf("no serialization format matched the provided data")
+		lastErr = errors.New("no serialization format matched the provided data")
 	}
 	return encoders, lastErr
 }
